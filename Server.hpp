@@ -1,30 +1,41 @@
 #pragma once
 #include <iostream>
-#include <string>
-#include <cstdlib>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <cstring>
-#include <cerrno>
+#include <vector>
+#include <poll.h>
+#include <cstdlib> // atoi
+#include <netinet/in.h> // struct sockaddr_in
+#include <stdexcept>
+#include <fcntl.h>
+#include <unistd.h> // close()
+#include "Client.hpp"
+#include <map>
+#include <cstring> //memset
+
+class Client;
 
 class Server{
 
     private :
 
         int port_;
-        int server_fd_, client_fd_;
-        struct sockaddr_in address_server_;
-        struct sockaddr_in address_client_;
-        socklen_t client_size_;
-    
-    public :
+        std::string password_;
+        int server_fd_;
+        std::vector <Client> clients_;
+        std::vector <struct pollfd> fds_;
 
-        Server(int port);
+        public :
+
+        Server(int port, std::string password);
         ~Server();
 
-        void initialize();
-        void acceptclient();
+        void initializeServer();
+        void createSocket();
+        void acceptClient();
+        void receiveData(int fd);
+
+        Client* getClient(int fd);
+
+        void clearClients(int fd);
+        void clearFd(int fd);
 };
 

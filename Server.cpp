@@ -1,56 +1,142 @@
 #include "Server.hpp"
 
-Server::Server(int port) : port_(port){}
+Server::Server(int port, std::string password) : port_(port), password_(password){}
 
 Server::~Server(){}
 
-void Server::initialize(){
+void Server::initializeServer(){
+
+    createSocket();
+    std::cout << "Server " << server_fd_ << " is connected on port " << port_ << std::endl;
+    while(1){
+
+        if(poll(fds_.data(), fds_.size(), -1) == -1)
+            throw(std::runtime_error("poll() failed"));
+        for(size_t i = 0; i < fds_.size(); i++){
+            if(fds_[i].revents && POLLIN){
+                if(fds_[i].fd == server_fd_)
+                    acceptClient();
+                else
+                    receiveData(fds_[i].fd);
+            }
+        }
+    }
+}
+
+void Server::createSocket(){
+
+    struct sockaddr_in servaddr;
+    struct pollfd NewPoll;
 
     //Creation de la socket
-    
+
     server_fd_ = socket(AF_INET, SOCK_STREAM, 0);
-    if(server_fd_ < 0){
+    if(server_fd_ == -1)
+        throw std::runtime_error("Failed to create socket");
 
-        std::cerr << "Error socket creation " << std::strerror(errno) << std::endl;
-        return;
-    }
+    //Config de l adresse du serveur
 
-    //Configuration de l adresse du serveur
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = INADDR_ANY;
+    servaddr.sin_port = htons(port_);
 
-    address_server_.sin_family = AF_INET;
-    address_server_.sin_addr.s_addr = INADDR_ANY;
-    address_server_.sin_port = htons(port_);
+    if(fcntl(server_fd_, F_SETFL, O_NONBLOCK) == -1)
+        throw(std::runtime_error("problem with fcntl()"));
+    if(bind(server_fd_, reinterpret_cast<struct sockaddr*>(&servaddr), sizeof(servaddr)) < 0)
+        throw(std::runtime_error("failed to bind socket"));
+    if(listen(server_fd_, 5) < 0)
+        throw(std::runtime_error("listen failed"));
 
-    //Connection du socket au port
 
-    if(bind(server_fd_, reinterpret_cast<struct sockaddr*>(&address_server_), sizeof(address_server_)) < 0){
+    // ajoute socket au tableau de fd
 
-        std::cerr << "Error socket binding " << std::strerror(errno) << std::endl;
-        return; 
-    }
-
-    //Attendre les connexions entrantes
-
-    if(listen(server_fd_, 5) < 0){
-
-        std::cerr << "Error when listening " << std::strerror(errno) << std::endl;
-        return; 
-    }
-
-    std::cout << "Connection is made on port " << port_ << std::endl;
-
+    NewPoll.fd = server_fd_;
+    NewPoll.events = POLLIN;
+    NewPoll.revents = 0;
+    fds_.push_back(NewPoll);
 }
 
-void Server::acceptclient(){
+void Server::acceptClient(){
 
-    //Accepter les connections clients
+    Client cli;
+    struct sockaddr_in cliaddr;
+    struct pollfd NewPoll;
+    socklen_t len = sizeof(cliaddr);
 
-    client_size_ = sizeof(address_client_);
-    client_fd_ = accept(server_fd_, reinterpret_cast<struct sockaddr*>(&address_client_), &client_size_);
-    if(client_fd_ < 0){
-        std::cerr << "Error connexion with client " << std::strerror(errno) << std::endl;
-        return;
-    }
+    int client_fd_ = accept(server_fd_, reinterpret_cast<sockaddr*>(&cliaddr), &len);
+    if (client_fd_ == -1)
+        throw std::runtime_error("accept() failed");
+    if(fcntl(client_fd_, F_SETFL, O_NONBLOCK) == -1)
+        throw(std::runtime_error("problem with fcntl()"));
+
+    NewPoll.fd = client_fd_;
+    NewPoll.events = POLLIN;
+    NewPoll.revents = 0;
+    cli.setFd(client_fd_);
+    clients_.push_back(cli);
+    fds_.push_back(NewPoll);
+
+    std::cout << "Client " << client_fd_ << " is connected" << std::endl;
+}
+
+void Server::receiveData(int fd){
+
+    // Client *cli = getClient(fd);
+    std::vector<std::string> cmds;
+    std::map<std::string, std::string> map_cmds;
+    char buff[1024];
+    memset(buff, 0, sizeof(buff));
+
+    size_t bytes = recv(fd, buff, sizeof(buff) - 1, 0);
+    if (bytes <= 0) {
+        if (bytes == 0) {
+            std::cout << "Client " << fd << " disconnected" << std::endl;
+        } else {
+            throw std::runtime_error("recv() failed for client ");
+        }
+        clearClients(fd);
+        clearFd(fd);
+        close(fd);
+    } else {
     
-    std::cout << "Accepted new connection on client socket fd : " << client_fd_ << std::endl;
+        buff[bytes] = '\0';
+        //print pour buffer
+        std::cout << "Client " << fd << " Data: " /*<< cli->getBuffer()*/ << buff << std::endl;
+    }   
 }
+
+Client* Server::getClient(int fd){
+	for (size_t i = 0; i < clients_.size(); i++){
+		if (clients_[i].getFd() == fd)
+			return &clients_[i];
+	}
+	return NULL;
+}
+
+//remove fd from fds_
+
+void Server::clearFd(int fd){
+
+    for(size_t i = 0; i < fds_.size(); i++){
+
+        if(fds_[i].fd == fd){
+            fds_.erase(fds_.begin() + i);
+            break;
+        }
+    }
+
+}
+
+//remove client from clients_
+
+ void Server::clearClients(int fd){
+
+    for(size_t i = 0; i < clients_.size(); i++){
+
+            if(clients_[i].getFd() == fd){
+
+            clients_.erase(clients_.begin() + i);
+            break;
+        }
+    }
+ }
