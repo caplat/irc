@@ -17,7 +17,10 @@ void Server::initializeServer(){
                 if(fds_[i].fd == server_fd_)
                     acceptClient();
                 else
-                    receiveData(fds_[i].fd);
+                {
+                    Client *client = getClient(fds_[i].fd);
+                    receiveData(*client);
+                }
             }
         }
     }
@@ -58,7 +61,7 @@ void Server::createSocket(){
 
 void Server::acceptClient(){
 
-    Client cli;
+    Client client;
     struct sockaddr_in cliaddr;
     struct pollfd NewPoll;
     socklen_t len = sizeof(cliaddr);
@@ -72,71 +75,39 @@ void Server::acceptClient(){
     NewPoll.fd = client_fd_;
     NewPoll.events = POLLIN;
     NewPoll.revents = 0;
-    cli.setFd(client_fd_);
-    clients_.push_back(cli);
+    client.setFd(client_fd_);
+    client.setNick("temporary_nick");
+    clients_.push_back(client);
     fds_.push_back(NewPoll);
 
     std::cout << "Client " << client_fd_ << " is connected" << std::endl;
 }
 
-void Server::receiveData(int fd){
+void Server::receiveData(Client &client){
 
-    // Client *cli = getClient(fd);
-    std::vector<std::string> cmds;
-    std::map<std::string, std::string> map_cmds;
     char buff[1024];
     memset(buff, 0, sizeof(buff));
 
-    size_t bytes = recv(fd, buff, sizeof(buff) - 1, 0);
+    size_t bytes = recv(client.getFd(), buff, sizeof(buff) - 1, 0);
     if (bytes <= 0) {
         if (bytes == 0) {
-            std::cout << "Client " << fd << " disconnected" << std::endl;
+            std::cout << "Client " << client.getFd() << " disconnected" << std::endl;
         } else {
             throw std::runtime_error("recv() failed for client ");
         }
-        clearClients(fd);
-        clearFd(fd);
-        close(fd);
+        clearClients(client.getFd());
+        clearFd(client.getFd());
+        close(client.getFd());
     } else {
-    
+
         buff[bytes] = '\0';
+        client.getBuffer().append(buff);
         //print pour buffer
-        std::cout << "Client " << fd << " Data: " /*<< cli->getBuffer()*/ << buff << std::endl;
+        std::cout << "Client " << client.getFd() << " Data: " << client.getBuffer()  << std::endl;
+        parseBuffer(client);
     }   
 }
 
-Client* Server::getClient(int fd){
-	for (size_t i = 0; i < clients_.size(); i++){
-		if (clients_[i].getFd() == fd)
-			return &clients_[i];
-	}
-	return NULL;
-}
 
-//remove fd from fds_
 
-void Server::clearFd(int fd){
 
-    for(size_t i = 0; i < fds_.size(); i++){
-
-        if(fds_[i].fd == fd){
-            fds_.erase(fds_.begin() + i);
-            break;
-        }
-    }
-
-}
-
-//remove client from clients_
-
- void Server::clearClients(int fd){
-
-    for(size_t i = 0; i < clients_.size(); i++){
-
-            if(clients_[i].getFd() == fd){
-
-            clients_.erase(clients_.begin() + i);
-            break;
-        }
-    }
- }
