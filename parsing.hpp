@@ -19,7 +19,7 @@ void Server::parseBuffer(Client &client){
 
 void Server::nick_cmd(std::string &command, Client &CLient){
 
-
+    
 }
 
 

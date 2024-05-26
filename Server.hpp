@@ -10,8 +10,6 @@
 #include <cstring> //memset
 #include <sstream>
 #include "Client.hpp"
-#include "pass.hpp"
-
 
 class Client;
 
