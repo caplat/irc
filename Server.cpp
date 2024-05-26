@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "parsing.hpp"
 
 Server::Server(int port, std::string password) : port_(port), password_(password){}
 
@@ -104,7 +105,7 @@ void Server::receiveData(Client &client){
         client.getBuffer().append(buff);
         //print pour buffer
         std::cout << "Client " << client.getFd() << " Data: " << client.getBuffer()  << std::endl;
-        // parseBuffer(client);
+        parseBuffer(client);
     }   
 }
 

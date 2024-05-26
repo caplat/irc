@@ -1,8 +1,9 @@
 #include "Server.hpp"
+#include "reply.hpp"
 
 void Server::parseBuffer(Client &client){
 
-    std::string& buffer = client.getBuffer();
+    std::string buffer = client.getBuffer();
     size_t pos = 0;
 
     while ((pos = buffer.find("\r\n")) != std::string::npos) {
@@ -10,19 +11,6 @@ void Server::parseBuffer(Client &client){
         buffer.erase(0, pos + 2);
         processCommand(command, client);
     }
-}
-
-int Server::find_cmds(const std::string &command) const {
-    static const std::vector<std::string> cmds = {
-        "PASS", "NICK", "USER", "JOIN", "PART", "TOPIC", "INVITE", "KICK", "QUIT", "MODE", "PRIVMSG"
-    };
-
-    for (size_t i = 0; i < cmds.size(); ++i) {
-        if (command.compare(0, cmds[i].size(), cmds[i]) == 0) {
-            return static_cast<int>(i);
-        }
-    }
-    return -1;
 }
 
 void Server::processCommand(const std::string &command, Client &client){
@@ -34,6 +22,39 @@ void Server::processCommand(const std::string &command, Client &client){
     }
 
 }
+
+std::vector<std::string> Server::create_cmds() {
+    std::vector<std::string> cmds;
+    cmds.push_back("PASS");
+    cmds.push_back("NICK");
+    cmds.push_back("USER");
+    cmds.push_back("JOIN");
+    cmds.push_back("PART");
+    cmds.push_back("TOPIC");
+    cmds.push_back("INVITE");
+    cmds.push_back("KICK");
+    cmds.push_back("QUIT");
+    cmds.push_back("MODE");
+    cmds.push_back("PRIVMSG");
+    return cmds;
+}
+
+const std::vector<std::string>& Server::get_cmds() {
+    static const std::vector<std::string> cmds = create_cmds();
+    return cmds;
+}
+
+int Server::find_cmds(const std::string &command) const {
+    const std::vector<std::string>& cmds = get_cmds();
+
+    for (size_t i = 0; i < cmds.size(); ++i) {
+        if (command.compare(0, cmds[i].size(), cmds[i]) == 0) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
 
 void Server::pass_command(const std::string &command, Client &client){
 

@@ -23,6 +23,9 @@ class Server{
         int server_fd_;
         std::vector <Client> clients_;
         std::vector <struct pollfd> fds_;
+        static const std::vector<std::string>& get_cmds();
+        static std::vector<std::string> create_cmds();
+
 
         public :
 
