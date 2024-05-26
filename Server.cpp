@@ -104,7 +104,7 @@ void Server::receiveData(Client &client){
         client.getBuffer().append(buff);
         //print pour buffer
         std::cout << "Client " << client.getFd() << " Data: " << client.getBuffer()  << std::endl;
-        parseBuffer(client);
+        // parseBuffer(client);
     }   
 }
 

@@ -44,7 +44,7 @@ void Server::pass_command(const std::string &command, Client &client){
     }
 }
 
-int count_params(const std::string& command) {
+int Server::count_params(const std::string& command) {
     std::istringstream iss(command);
     std::vector<std::string> tokens;
     std::string token;
@@ -55,7 +55,7 @@ int count_params(const std::string& command) {
     return tokens.size() - 1;
 }
 
-void sendMessage(int sockfd, const std::string& message) {
+void Server::sendMessage(int sockfd, const std::string& message) {
 
     int bytes_sent = send(sockfd, message.c_str(), message.length(), 0);    
     if (bytes_sent == -1) {

@@ -1,6 +1,5 @@
 #ifndef REPLY_HPP
 #define REPLY_HPP
-#include "Server.hpp"
 
 #define CRLF "\r\n"
 #define ERR_NEEDMOREPARAMS(nickname) (": 461 " + nickname + " :Not enough parameters." + CRLF)
