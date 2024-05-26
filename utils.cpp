@@ -36,3 +36,24 @@ void Server::clearFd(int fd){
 	}
 	return NULL;
 }
+
+void Server::sendMessage(int sockfd, const std::string& message) {
+
+    int bytes_sent = send(sockfd, message.c_str(), message.length(), 0);    
+    if (bytes_sent == -1) {
+        std::cerr << "Erreur lors de l'envoi du message" << std::endl;
+    } else {
+        std::cout << "Message envoyé avec succès !" << std::endl;
+    }
+}
+
+int Server::count_params(const std::string& command) {
+    std::istringstream iss(command);
+    std::vector<std::string> tokens;
+    std::string token;
+
+    while (iss >> token) {
+        tokens.push_back(token);
+    }
+    return tokens.size() - 1;
+}

@@ -10,6 +10,7 @@
 #include <cstring> //memset
 #include <sstream>
 #include "Client.hpp"
+#include "pass.hpp"
 
 
 class Client;
@@ -23,9 +24,6 @@ class Server{
         int server_fd_;
         std::vector <Client> clients_;
         std::vector <struct pollfd> fds_;
-        static const std::vector<std::string>& get_cmds();
-        static std::vector<std::string> create_cmds();
-
 
         public :
 
@@ -38,17 +36,19 @@ class Server{
         void receiveData(Client &Client);
         
         //utils
-        
         void clearClients(int fd);
         Client* getClient(int fd);
         void clearFd(int fd);
+        void sendMessage(int sockfd, const std::string& message); 
+        int count_params(const std::string& command);
 
         //parsing
-       
         void parseBuffer(Client &client);
-        int find_cmds(const std::string &command) const;
-        void processCommand(const std::string &command, Client &client);
-        void pass_command(const std::string &command, Client &client);
-        int count_params(const std::string& command);
-        void sendMessage(int sockfd, const std::string& message); 
+
+        //pass
+        void pass_cmd(std::string &command, Client &client);
+
+        //nick
+        void nick_cmd(std::string &command, Client &client);
+        
 };
