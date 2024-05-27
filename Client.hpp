@@ -12,7 +12,7 @@ class Client{
 
     public :
 
-        Client() :fd_(-1), buffer_(""), nick_("temporary_nick"), is_registered_(0){};
+        Client() :fd_(-1), buffer_(""), nick_(""), is_registered_(0){};
         ~Client(){};
 
         std::string& getBuffer() { return buffer_; };

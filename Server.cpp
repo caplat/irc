@@ -1,5 +1,4 @@
 #include "Server.hpp"
-#include "parsing.hpp"
 
 Server::Server(int port, std::string password) : port_(port), password_(password){}
 
@@ -88,7 +87,7 @@ void Server::receiveData(Client &client){
     char buff[1024];
     memset(buff, 0, sizeof(buff));
 
-    size_t bytes = recv(client.getFd(), buff, sizeof(buff) - 1, MSG_WAITALL);
+    size_t bytes = recv(client.getFd(), buff, sizeof(buff) - 1, 0);
     if (bytes <= 0) {
         if (bytes == 0) {
             std::cout << "Client " << client.getFd() << " disconnected" << std::endl;
@@ -103,12 +102,11 @@ void Server::receiveData(Client &client){
         buff[bytes] = '\0';
         client.getBuffer().append(buff);
         //print pour buffer
-        std::cout << "Client " << client.getFd() << " Data: " << buff << std::endl;
-        // std::cout << "Client " << client.getFd() << " Data: " << client.getBuffer()  << std::endl;
+        // std::cout << "Client " << client.getFd() << " Data: " << buff << std::endl;
+        std::cout << "Client " << client.getFd() << " Data: " << client.getBuffer()  << std::endl;
         parseBuffer(client);
     }   
 }
-
 
 
 

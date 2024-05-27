@@ -10,6 +10,8 @@
 #include <cstring> //memset
 #include <sstream>
 #include "Client.hpp"
+#include "reply.hpp"
+#include "Channel.hpp"
 
 class Client;
 
@@ -48,5 +50,7 @@ class Server{
 
         //nick
         void nick_cmd(std::string &command, Client &client);
+        bool is_nick_valid(std::string &nick);
+        bool is_nick_taken(std::string &nick, Client &client);
         
 };

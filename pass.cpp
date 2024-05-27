@@ -1,5 +1,6 @@
 #include "Server.hpp"
-#include "reply.hpp"
+
+class Server;
 
 void Server::pass_cmd(std::string &command, Client &client){
 
@@ -7,6 +8,7 @@ void Server::pass_cmd(std::string &command, Client &client){
     size_t pos = command.find_first_not_of("\t\v ");
     if(pos < command.size())
         command = command.substr(pos);
+    std::cout << "pass : " << command << std::endl;
     if(pos == std::string::npos || command.empty())
         sendMessage(client.getFd(), ERR_NEEDMOREPARAMS(client.getNick()));
     else if(client.getRegistered() == 0){
@@ -15,10 +17,10 @@ void Server::pass_cmd(std::string &command, Client &client){
         if(pass == password_)
             client.setRegistered(true);
         else{
-            sendMessage(client.getFd(), ERR_PASSWDMISMATCH(client.getNick()));
+            sendMessage(client.getFd(), "ERROR" + ERR_PASSWDMISMATCH(client.getNick()));
+            close(client.getFd());
             clearClients(client.getFd());
             clearFd(client.getFd());
-            close(client.getFd());
         }
     }
     else

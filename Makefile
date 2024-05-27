@@ -4,6 +4,10 @@ SRCS = main.cpp \
 Server.cpp \
 Client.cpp \
 utils.cpp \
+parsing.cpp \
+pass.cpp \
+nick.cpp \
+Channel.cpp \
 
 CXX = c++
 
